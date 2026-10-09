@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rends la monnaie</title>
+<style>
+:root{--bg:#eef8f0;--card:#fff;--tx:#2b2b3a;--mute:#6b6b80;--ok:#2e9e5b;--ko:#d9534f;--ac:#ffb703;--bd:#cfe3d3;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d2a22;--card:#27372d;--tx:#f2f2f7;--mute:#aebdb2;--bd:#3d5446}}
+:root[data-theme="dark"]{--bg:#1d2a22;--card:#27372d;--tx:#f2f2f7;--mute:#aebdb2;--bd:#3d5446}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Trebuchet MS","Comic Sans MS",system-ui,sans-serif;font-size:18px}
+header{text-align:center;padding:14px 10px 2px}
+h1{margin:0 0 8px;font-size:1.6rem}
+main{max-width:760px;margin:auto;padding:10px 12px 24px}
+.card{background:var(--card);border:2px solid var(--bd);border-radius:18px;padding:14px;margin-bottom:12px}
+button{font:inherit;cursor:pointer;border:2px solid var(--bd);background:var(--card);color:var(--tx);border-radius:14px;padding:8px 14px}
+button:hover{border-color:var(--ac)}
+button.on{background:var(--ac);border-color:var(--ac);color:#2b2b3a;font-weight:bold}
+select{font:inherit;padding:6px;border-radius:10px;border:2px solid var(--bd);background:var(--card);color:var(--tx)}
+.row{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;margin:8px 0}
+.hint{color:var(--mute);font-size:.9rem;text-align:center}
+.scene{text-align:center}
+.item{font-size:1.4rem}
+.item .em{font-size:3.2rem;display:block}
+.price{display:inline-block;background:var(--ac);color:#2b2b3a;font-weight:bold;font-size:1.6rem;border-radius:10px;padding:2px 12px;margin:6px 0}
+.pay{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.tray{min-height:84px;border:3px dashed var(--bd);border-radius:14px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center}
+.tray:empty::before{content:"Clique sur les pièces et billets pour les mettre ici";color:var(--mute);font-size:.95rem}
+.sum{text-align:center;font-size:1.5rem;font-weight:bold;margin-top:8px;min-height:1.6em}
+.coin{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:bold;border:3px solid;cursor:pointer;box-shadow:0 2px 3px rgba(0,0,0,.3);user-select:none;-webkit-user-select:none;color:#3b2a10;font-size:.95rem}
+.cu{background:radial-gradient(#e59a63,#b8693a);border-color:#8f4e28;color:#fff}
+.au{background:radial-gradient(#f6dc7b,#d9b33f);border-color:#a8861f}
+.b1{background:radial-gradient(circle,#e8c85a 52%,#cfd2d9 54%);border-color:#9a9ca3}
+.b2{background:radial-gradient(circle,#dfe2e8 52%,#d9b33f 54%);border-color:#a8861f}
+.bill{width:116px;height:58px;border-radius:6px;border:2px solid rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:1.3rem;color:#222;cursor:pointer;user-select:none;-webkit-user-select:none;box-shadow:0 2px 3px rgba(0,0,0,.25)}
+.bill.big{width:140px;height:70px;font-size:1.6rem;cursor:default}
+.fb{min-height:3em;text-align:center;font-weight:bold;font-size:1.15rem;margin-top:6px}
+.fb.ok{color:var(--ok)}.fb.ko{color:var(--ko)}
+.caisse h3{margin:4px 0;font-size:1rem;color:var(--mute);text-align:center}
+</style>
+</head>
+<body>
+<header><h1>💶 Rends la monnaie</h1></header>
+<main>
+  <div class="card">
+    <div class="row" style="margin-top:0">
+      <label>Niveau :
+        <select id="lvl">
+          <option value="1">1 · Prix en euros entiers</option>
+          <option value="2" selected>2 · Prix avec 50 centimes</option>
+          <option value="3">3 · Prix de 10 en 10 centimes</option>
+          <option value="4">4 · Tous les centimes</option>
+        </select>
+      </label>
+    </div>
+    <div class="hint" id="prog"></div>
+  </div>
+
+  <div class="card scene">
+    <div class="item" id="item"></div>
+    <div class="price" id="price"></div>
+    <div class="pay">Le client paie avec <div class="bill big" id="paid"></div></div>
+    <p style="margin:8px 0 0"><b>Rends-lui sa monnaie !</b></p>
+  </div>
+
+  <div class="card">
+    <div class="tray" id="tray"></div>
+    <div class="sum" id="sum"></div>
+    <div class="row">
+      <button id="chk" class="on">✔️ Vérifier</button>
+      <button id="clr">🗑️ Vider</button>
+      <button id="tot">👁️ Total</button>
+      <button id="sol">💡 Solution</button>
+      <button id="nxt" style="display:none">➡️ Suivant</button>
+    </div>
+    <div class="fb" id="fb"></div>
+  </div>
+
+  <div class="card caisse">
+    <h3>Les billets</h3>
+    <div class="row" id="bills"></div>
+    <h3>Les pièces</h3>
+    <div class="row" id="coins"></div>
+  </div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id), rnd=n=>Math.floor(Math.random()*n);
+const COINS=[1,2,5,10,20,50,100,200], BILLS=[500,1000,2000,5000];
+const SIZE={1:36,2:41,5:47,10:43,20:49,50:53,100:51,200:57};
+const BC={500:'#c9ccd1',1000:'#f2a5a0',2000:'#9ec5f5',5000:'#f7b977'};
+const CL={1:'cu',2:'cu',5:'cu',10:'au',20:'au',50:'au',100:'b1',200:'b2'};
+const ITEMS=[['🍎','une pomme'],['🥖','une baguette'],['✏️','un crayon'],['📒','un cahier'],['⚽','un ballon'],['🧃','un jus de fruit'],['🍫','une tablette de chocolat'],['🧸','un petit ours en peluche'],['🍦','une glace'],['📚','un livre'],['🎈','un ballon de baudruche'],['🥐','un croissant'],['🖍️','une boîte de feutres'],['🧁','un gâteau']];
+const lab=v=>v<100?v+' c':(v/100)+' €';
+const fmt=c=>c%100===0?(c/100)+' €':(c/100).toFixed(2).replace('.',',')+' €';
+
+function mk(v,click){
+  const d=document.createElement('div');
+  if(v>=500){d.className='bill';d.style.background=BC[v];d.textContent=(v/100)+' €';}
+  else{d.className='coin '+CL[v];d.style.width=d.style.height=SIZE[v]+'px';d.textContent=lab(v);}
+  if(click)d.onclick=click;return d;
+}
+let tray=[];
+function addV(v){tray.push(v);render();}
+function render(){
+  const t=$('tray');t.innerHTML='';
+  tray.slice().sort((a,b)=>b-a).forEach(v=>t.appendChild(mk(v,()=>{tray.splice(tray.indexOf(v),1);render();})));
+  $('sum').textContent=showT?'Total rendu : '+fmt(tray.reduce((a,b)=>a+b,0)):'';
+}
+BILLS.slice().reverse().forEach(v=>$('bills').appendChild(mk(v,()=>addV(v))));
+COINS.slice().reverse().forEach(v=>$('coins').appendChild(mk(v,()=>addV(v))));
+let showT=true;
+$('tot').onclick=()=>{showT=!showT;$('tot').classList.toggle('on',showT);render();};
+$('tot').classList.add('on');
+
+const Q={n:0,score:0,change:0,tries:0,done:false,last:-1};
+function newQ(){
+  if(Q.n>=10){
+    $('item').innerHTML='<span class="em">🏆</span>Série terminée !';$('price').textContent=Q.score+' / 10';
+    $('paid').style.display='none';tray=[];render();$('fb').className='fb ok';
+    $('fb').textContent=Q.score>=9?'Bravo, tu es un as de la monnaie !':Q.score>=6?'Très bien, continue !':'Continue à t\'entraîner !';
+    ['chk','clr','tot','sol'].forEach(i=>$(i).style.display='none');
+    $('nxt').style.display='';$('nxt').textContent='🔁 Rejouer';$('prog').textContent='';Q.n=-1;return;
+  }
+  const lvl=+$('lvl').value;
+  let p=[100*(1+rnd(19)),50*(1+rnd(38)),10*(5+rnd(190)),50+rnd(1950)][lvl-1];
+  const c=BILLS.filter(b=>b>p).slice(0,2),b=c[rnd(c.length)];
+  let k;do{k=rnd(ITEMS.length)}while(k===Q.last);Q.last=k;
+  Q.change=b-p;Q.n++;Q.tries=0;Q.done=false;tray=[];
+  $('item').innerHTML=`<span class="em">${ITEMS[k][0]}</span>Le client achète ${ITEMS[k][1]}`;
+  $('price').textContent='Prix : '+fmt(p);
+  const pe=$('paid');pe.style.display='';pe.style.background=BC[b];pe.textContent=(b/100)+' €';
+  $('prog').textContent=`Question ${Q.n} / 10 · Score : ${Q.score}`;
+  $('fb').textContent='';$('fb').className='fb';
+  ['chk','clr','tot','sol'].forEach(i=>$(i).style.display='');$('nxt').style.display='none';
+  $('chk').textContent='✔️ Vérifier';render();
+}
+function solution(c){
+  const out=[];[5000,2000,1000,500,200,100,50,20,10,5,2,1].forEach(v=>{const n=Math.floor(c/v);c-=n*v;
+    if(n)out.push(n+(v>=500?(n>1?' billets':' billet'):(n>1?' pièces':' pièce'))+' de '+lab(v));});
+  return out.join(' + ');
+}
+$('chk').onclick=()=>{
+  if(Q.done)return;const s=tray.reduce((a,b)=>a+b,0);Q.tries++;
+  if(s===Q.change){
+    if(Q.tries===1)Q.score++;Q.done=true;$('fb').className='fb ok';
+    $('fb').textContent='🎉 Bravo, la monnaie est juste : '+fmt(Q.change)+' !';
+    $('chk').style.display='none';$('nxt').style.display='';$('nxt').textContent='➡️ Suivant';
+    $('prog').textContent=`Question ${Q.n} / 10 · Score : ${Q.score}`;
+  }else{
+    $('fb').className='fb ko';
+    $('fb').textContent=s>Q.change?'Tu rends trop d\'argent. Retire des pièces ou des billets.':'Ce n\'est pas assez. Ajoute de l\'argent.';
+    $('chk').textContent='✔️ Revérifier';
+  }
+};
+$('clr').onclick=()=>{tray=[];render();};
+$('sol').onclick=()=>{$('fb').className='fb';$('fb').textContent='💡 À rendre : '+fmt(Q.change)+' → '+solution(Q.change);
+  $('nxt').style.display='';$('nxt').textContent='⏭️ Passer';};
+$('nxt').onclick=()=>{if(Q.n===-1){Q.n=0;Q.score=0;}newQ();};
+$('lvl').onchange=()=>{Q.n=0;Q.score=0;newQ();};
+newQ();
+</script>
+</body>
+</html>
